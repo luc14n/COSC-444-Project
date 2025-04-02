@@ -8,8 +8,9 @@ import static java.lang.System.currentTimeMillis;
 
 public class Main extends Thread implements Pokedex {
     public static PokeHash pokedex = new PokeHash();
-    public static final String FILE_DATA_NAME = "src/pokemon_pokedex_alt.csv";
-    // public static final String FILE_DATA_NAME = "src/new_pokemon_pokedex.csv";
+    //public static final String FILE_DATA_NAME = "src/pokemon_pokedex_alt.csv";
+    //public static final String FILE_DATA_NAME = "src/new_pokemon_pokedex.csv";
+    public static final String FILE_DATA_NAME = "src/new_pokemon_pokedex_1_million.csv";
     public static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     private boolean isReady = false;
 
@@ -39,10 +40,11 @@ public class Main extends Thread implements Pokedex {
 
         // Start as a thread
         Thread getDataThread = new Thread(() -> {
+            long x = currentTimeMillis();
             PokemanzInfo.getData(this);
-            System.out.println(currentTimeMillis());
+            System.out.println("Data loaded in " + (currentTimeMillis() - x) + "ms.");
         });
-        System.out.println(currentTimeMillis());
+
         getDataThread.start();
 
     }

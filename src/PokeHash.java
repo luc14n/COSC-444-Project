@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class PokeHash {
 
     // Constants
-    public static final int TABLE_SIZE = 10000;
+    public static final int TABLE_SIZE = 10000000;
     public static final double MAX_LOAD_FACTOR = 0.8;
 
     // Instance variables
