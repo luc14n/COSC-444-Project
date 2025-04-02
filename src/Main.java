@@ -4,13 +4,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.lang.Thread;
 
+import static java.lang.System.currentTimeMillis;
+
 public class Main extends Thread implements Pokedex {
-    public static ArrayList<PokemanzInfo> dataImport;
     public static PokeHash pokedex = new PokeHash();
     public static final String FILE_DATA_NAME = "src/pokemon_pokedex_alt.csv";
+    // public static final String FILE_DATA_NAME = "src/new_pokemon_pokedex.csv";
     public static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     private boolean isReady = false;
-    private boolean printing = false;
 
     public void run() {
         Thread setUpThread = new Thread(this::setUp);
@@ -36,11 +37,14 @@ public class Main extends Thread implements Pokedex {
 
         isReady = true;
 
-        dataImport = PokemanzInfo.getData();
+        // Start as a thread
+        Thread getDataThread = new Thread(() -> {
+            PokemanzInfo.getData(this);
+            System.out.println(currentTimeMillis());
+        });
+        System.out.println(currentTimeMillis());
+        getDataThread.start();
 
-        for (PokemanzInfo pokemon : dataImport) {
-            add(pokemon);
-        }
     }
 
     /**

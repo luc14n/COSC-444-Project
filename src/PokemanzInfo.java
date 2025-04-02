@@ -2,6 +2,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class PokemanzInfo {
 
@@ -68,39 +73,57 @@ public class PokemanzInfo {
                 this.attack, this.defense, this.health, this.attack_Sp, this.defense_Sp, this.speed);
     }
 
-    public static ArrayList<PokemanzInfo> getData() {
-        // Temp list to parse file
-        ArrayList<PokemanzInfo> pokemanzList = new ArrayList<>();
+    public static void getData(Main pokedex) {
+        ConcurrentLinkedQueue<String> linesQueue = new ConcurrentLinkedQueue<>();
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-        try (BufferedReader br = new BufferedReader(new FileReader(Main.FILE_DATA_NAME))) {
-            String line;
-            line = br.readLine();
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-
-                // Making a new instance pf PokemanzInfo with the values from the csv file
-                PokemanzInfo pokemanz = new PokemanzInfo(
-                        Integer.parseInt(values[0]), // attack
-                        values[1],                   // classification
-                        Integer.parseInt(values[2]), // defense
-                        Integer.parseInt(values[3]), // health
-                        values[4],                   // name_Jap
-                        values[5].toLowerCase(),     // name
-                        Integer.parseInt(values[6]), // pokedex_Num
-                        Integer.parseInt(values[7]), // attack_Sp
-                        Integer.parseInt(values[8]), // defense_Sp
-                        Integer.parseInt(values[9]), // speed
-                        values[10],                  // type_1
-                        values.length > 11 ? values[11] : null // type_2
-                );
-                pokemanzList.add(pokemanz);
+        // Thread to read the file
+        executor.submit(() -> {
+            try (BufferedReader br = new BufferedReader(new FileReader(Main.FILE_DATA_NAME))) {
+                String line;
+                br.readLine(); // Skip header
+                while ((line = br.readLine()) != null) {
+                    linesQueue.add(line);
+                }
+            } catch (IOException e) {
+                System.out.println("Whoah nelly, somethin' aint right!");
+                e.getCause();
             }
-        } catch (IOException e) {
-            System.out.println("Whoah nelly, somethin' aint right!");
-            e.getCause();
+        });
+
+        // Threads to process the lines
+        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
+            executor.submit(() -> {
+                while (true) {
+                    String line = linesQueue.poll();
+                    if (line == null) {
+                        break;
+                    }
+                    String[] values = line.split(",");
+                    PokemanzInfo pokemanz = new PokemanzInfo(
+                            Integer.parseInt(values[0]), // attack
+                            values[1],                   // classification
+                            Integer.parseInt(values[2]), // defense
+                            Integer.parseInt(values[3]), // health
+                            values[4],                   // name_Jap
+                            values[5].toLowerCase(),     // name
+                            Integer.parseInt(values[6]), // pokedex_Num
+                            Integer.parseInt(values[7]), // attack_Sp
+                            Integer.parseInt(values[8]), // defense_Sp
+                            Integer.parseInt(values[9]), // speed
+                            values[10],                  // type_1
+                            values.length > 11 ? values[11] : null // type_2
+                    );
+                    pokedex.add(pokemanz);
+                }
+            });
         }
 
-        // returning
-        return pokemanzList;
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
